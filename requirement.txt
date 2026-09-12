@@ -1,3 +1,4 @@
 readchar
 seedir
 colorama
+playsound3
