@@ -8,13 +8,16 @@ import platform
 import os
 import seedir as sd
 import sys
+from playsound3 import playsound
 import random
 import readchar
 from pathlib import Path
 
 log = 1
+#main = os.path.dirname(os.path.abspath(sys.argv[0]))
+main = os.path.dirname(os.path.abspath(sys.executable if getattr(sys, 'frozen', False) else __file__))
 
-main = Path("main.txt").read_text(encoding="UTF-8")
+move = "none"
 
 fore = Fore.WHITE
 back = Back.BLACK
@@ -35,6 +38,8 @@ with open(f"{main}/config.json", "r", encoding="UTF-8") as json_file:
 with open(f"{main}/cmd/os.json", "r", encoding="UTF-8") as os_file:
 	os_data = json.loads(os_file.read())
 
+move_data = json.loads("{}")
+
 if os.name == "nt":
 	data["logo"] = os_data["win"]
 else:
@@ -47,7 +52,11 @@ else:
 
 angry_mater = 0
 
+sound_mode = False
+
 data["username"] = getpass.getuser()
+if Path(f"{main}/cmd/sub.name").read_text(encoding="UTF-8") != "":
+	data["username"] = Path(f"{main}/cmd/sub.name").read_text(encoding="UTF-8")
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-f", default="none", help=data["help"]["file"])
@@ -87,10 +96,15 @@ def command(cmd: str):
 	global log
 	global commands
 	global ascii_text
+	global arg2
+	global sound
+	global sound2
+	global sound_mode
+	global move
 	commands = False
 	load_cmd = cmd
 	#custom
-	if load_cmd.split()[0] == "none" or load_cmd.split()[0] == "cls" or load_cmd.split()[0] == "clear" or load_cmd.split()[0] == "exit" or load_cmd.split()[0] == "ls" or load_cmd.split()[0] == "dir" or load_cmd.split()[0] == "cd" or load_cmd.split()[0] == "chdir" or load_cmd.split()[0] == "bash" or load_cmd.split()[0] == "title" or load_cmd.split()[0] == "pause" or load_cmd.split()[0] == "help" or load_cmd.startswith("./") == True or load_cmd.split()[0] == "secret" or load_cmd.split()[0] == "grep" or load_cmd.split()[0] == "tree" or load_cmd.split()[0] == "echo" or load_cmd.split()[0] == "what" or load_cmd.split()[0] == "color" or load_cmd.split()[0] == "pwd" or load_cmd.split()[0] == "lang":
+	if load_cmd.split()[0] == "none" or load_cmd.split()[0] == "cls" or load_cmd.split()[0] == "clear" or load_cmd.split()[0] == "exit" or load_cmd.split()[0] == "ls" or load_cmd.split()[0] == "dir" or load_cmd.split()[0] == "cd" or load_cmd.split()[0] == "chdir" or load_cmd.split()[0] == "bash" or load_cmd.split()[0] == "title" or load_cmd.split()[0] == "pause" or load_cmd.split()[0] == "help" or load_cmd.startswith("./") == True or load_cmd.startswith(":") == True or load_cmd.split()[0] == "secret" or load_cmd.split()[0] == "grep" or load_cmd.split()[0] == "tree" or load_cmd.split()[0] == "echo" or load_cmd.split()[0] == "what" or load_cmd.split()[0] == "color" or load_cmd.split()[0] == "pwd" or load_cmd.split()[0] == "lang" or load_cmd.split()[0] == "playsound" or load_cmd.split()[0] == "stopsound" or load_cmd.split()[0] == "playsound2" or load_cmd.split()[0] == "goto":
 		if load_cmd.split()[0] == "cls" or load_cmd.split()[0] == "clear":
 			if os.name == "nt":
 				log = os.system("cls")
@@ -100,9 +114,53 @@ def command(cmd: str):
 		if load_cmd.split()[0] == "exit":
 			exits = True
 			sys.exit()
+		
+		
+		if load_cmd.startswith(":") == True:
+			arg = load_cmd.replace(":", "", 1).replace('"', '').replace("'", "").lstrip().strip()
+			if arg != "":
+				move = arg.split()[0]
+		
 
 		if load_cmd.split()[0] == "pwd":
 			print(os.getcwd())
+		
+		if load_cmd.split()[0] == "playsound":
+			arg = load_cmd.replace(load_cmd.split()[0], "", 1).replace('"', '').replace("'", "").lstrip().strip()
+			if arg != "":
+				if Path(arg).exists() == True:
+					if Path(arg).suffix != ".ogg":
+						if Path(arg).suffix == ".wav" or Path(arg).suffix == ".mp3":
+							sound = playsound(arg, block=False)
+							sound_mode = True
+						else:
+							print(data["message"]["wrong_file"])
+					else:
+						print(data["message"]["wrong_file"])
+				else:
+					print(f"{arg}{data["message"]["sound_error"]}")
+			else:
+				print(data["message"]["sound_help"])
+		
+		if load_cmd.split()[0] == "playsound2":
+			arg = load_cmd.replace(load_cmd.split()[0], "", 1).replace('"', '').replace("'", "").lstrip().strip()
+			if arg != "":
+				if Path(arg).exists() == True:
+					if Path(arg).suffix != ".ogg":
+						if Path(arg).suffix == ".wav" or Path(arg).suffix == ".mp3":
+							sound2 = playsound(arg, block=True)
+						else:
+							print(data["message"]["wrong_file"])
+					else:
+						print(data["message"]["wrong_file"])
+				else:
+					print(f"{arg}{data["message"]["sound_error"]}")
+			else:
+				print(data["message"]["sound_help2"])
+
+		if load_cmd.split()[0] == "stopsound":
+			if sound_mode == True:
+				sound.stop()
 
 		if load_cmd.split()[0] == "lang":
 			print(data["message"]["lang"])
@@ -302,9 +360,18 @@ def command(cmd: str):
 							load_file = file_load.read()
 						file_lines = load_file.splitlines()
 						file_count = 0
-						for _ in range(len(file_lines)):
+						while True:
+							arg2 = file_lines[file_count]
+							if arg2.split()[0] == "goto":
+								if arg2.split()[1] in move_data:
+									file_count = data[arg2.split()[1]]
 							cmd_load(file_lines[file_count])
+							if move != "none":
+								data[move] = file_count
+								move = "none"
 							file_count = file_count + 1
+							if file_count == len(file_lines):
+								break
 					else:
 						print(f"{arg}{data["message"]["wrong_file2"]}")
 				else:
@@ -425,9 +492,18 @@ else:
 						load_file = file_load.read()
 					file_lines = load_file.splitlines()
 					file_count = 0
-					for _ in range(len(file_lines)):
+					while True:
+						arg2 = file_lines[file_count]
+						if arg2.split()[0] == "goto":
+							if arg2.split()[1] in move_data:
+								file_count = data[arg2.split()[1]]
 						cmd_load(file_lines[file_count])
+						if move != "none":
+							data[move] = file_count
+							move = "none"
 						file_count = file_count + 1
+						if file_count == len(file_lines):
+							break
 				else:
 					print(f"{args.f}{data["message"]["wrong_file2"]}")
 			else:
