@@ -228,7 +228,33 @@ def command(cmd: str):
 						print(data["message"]["color20"])
 				else:
 					if len(arg) >= 3:
-						print("error")
+						print(data["message"]["color1"])
+						print("")
+						print(data["message"]["color2"])
+						print("")
+						print(data["message"]["color3"])
+						print("")
+						print(data["message"]["color4"])
+						print(data["message"]["color5"])
+						print(data["message"]["color6"])
+						print("")
+						print(data["message"]["color7"])
+						print(data["message"]["color8"])
+						print(data["message"]["color9"])
+						print(data["message"]["color10"])
+						print(data["message"]["color11"])
+						print(data["message"]["color12"])
+						print(data["message"]["color13"])
+						print(data["message"]["color14"])
+						print("")
+						print(data["message"]["color15"])
+						print(data["message"]["color16"])
+						print(data["message"]["color17"])
+						print("")
+						print(data["message"]["color18"])
+						print(data["message"]["color19"])
+						print("")
+						print(data["message"]["color20"])
 					else:
 						count = 0
 						fore = "error"
@@ -364,10 +390,10 @@ def command(cmd: str):
 							arg2 = file_lines[file_count]
 							if arg2.split()[0] == "goto":
 								if arg2.split()[1] in move_data:
-									file_count = data[arg2.split()[1]]
+									file_count = move_data[arg2.split()[1]]
 							cmd_load(file_lines[file_count])
 							if move != "none":
-								data[move] = file_count
+								move_data[move] = file_count
 								move = "none"
 							file_count = file_count + 1
 							if file_count == len(file_lines):
@@ -488,22 +514,33 @@ else:
 		if args.f != "none":
 			if Path(args.f).suffix == ".sh":
 				if Path(args.f).exists() == True:
-					with open(args.f, "r", encoding="UTF-8") as file_load:
-						load_file = file_load.read()
-					file_lines = load_file.splitlines()
-					file_count = 0
-					while True:
-						arg2 = file_lines[file_count]
-						if arg2.split()[0] == "goto":
-							if arg2.split()[1] in move_data:
-								file_count = data[arg2.split()[1]]
-						cmd_load(file_lines[file_count])
-						if move != "none":
-							data[move] = file_count
-							move = "none"
-						file_count = file_count + 1
-						if file_count == len(file_lines):
-							break
+					try:
+						with open(args.f, "r", encoding="UTF-8") as file_load:
+							load_file = file_load.read()
+						file_lines = load_file.splitlines()
+						file_count = 0
+						while True:
+							arg2 = file_lines[file_count]
+							if arg2.split()[0] == "goto":
+								if arg2.split()[1] in move_data:
+									file_count = move_data[arg2.split()[1]]
+							cmd_load(file_lines[file_count])
+							if move != "none":
+								move_data[move] = file_count
+								move = "none"
+							file_count = file_count + 1
+							if file_count == len(file_lines):
+								break
+					except (KeyboardInterrupt, EOFError):
+						if os.name == "nt":
+							print("\033[31m^C\033[0m")
+						angry_mater = angry_mater + 1
+						if angry_mater >= 87:
+							print(data["message"]["secret"])
+						if os.name == "nt":
+							print("")
+						else:
+							print("\n")
 				else:
 					print(f"{args.f}{data["message"]["wrong_file2"]}")
 			else:
